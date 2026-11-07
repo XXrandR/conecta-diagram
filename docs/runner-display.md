@@ -51,7 +51,7 @@ No credentials, private connection details, full binary bodies or unrestricted r
 `RunnerDisplay` is a bounded in-memory presentation projection. It correlates command ids to existing task/decision nodes and accepts `RunnerResultPreview` DTOs. The host/backend maps generated protobuf messages to these redacted DTOs. It has no networking, persistence, dispatch or worker code.
 
 ```ts
-import { RunnerDisplay } from "@maximus/diagram/core";
+import { RunnerDisplay } from "@xxrandr/conecta-diagram/core";
 
 const display = new RunnerDisplay(store.getSnapshot());
 display.track("command-42", "process"); // Correlation only, not command dispatch

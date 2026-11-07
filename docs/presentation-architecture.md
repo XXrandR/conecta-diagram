@@ -4,7 +4,7 @@ The current presentation is defined by **[the Photon + DevTools refactor](devtoo
 
 ## Library boundary
 
-- `src/svg/photon.css`: shared template tokens and component classes; import `@maximus/diagram/photon.css` explicitly.
+- `src/svg/photon.css`: shared template tokens and component classes; import `@xxrandr/conecta-diagram/photon.css` explicitly.
 - `src/svg/PhotonCard.ts`: safe HTML/SVG template structure; all text is inserted with DOM APIs, never interpolated into executable HTML.
 - `src/svg/SvgFlowEditor.ts`: keyed SVG groups, selection, connections, camera and native D3 movement. It owns no application panel or runtime transport.
 - `src/svg/icons.ts` / `NodeTooltip.ts`: small local SVG glyphs and instance-owned, theme-token tool previews. Destroy removes listeners, timers and tooltip elements.

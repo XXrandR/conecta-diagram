@@ -1,6 +1,19 @@
-# Maximus Diagram
+# Conecta Diagram
 
 A TypeScript library for **planning program flows**, editing diagrams, and simulating control flow. Framework-independent: React and Angular are hosts, not dependencies. The core has no D3 imports; presentation uses focused D3 modules for physics, keyed joins, easing, interpolation and frame scheduling.
+
+## Installation
+
+```sh
+npm install @xxrandr/conecta-diagram
+```
+
+The package ships ESM and CommonJS builds with TypeScript declarations and no runtime dependencies (the small D3 modules are bundled). Import the stylesheet once and instantiate the editor on an `<svg>` element — the adapter is imperative, so any framework can host it.
+
+```tsx
+import "@xxrandr/conecta-diagram/photon.css";
+import { FlowStore, SvgFlowEditor } from "@xxrandr/conecta-diagram";
+```
 
 ## Development
 
@@ -10,21 +23,22 @@ Use Node 22.18+ for the development tools. The built core supports Node 20+; the
 npm ci
 npm run dev               # Builds first, serves current demo, watches/reloads changes
 npm run check             # types, tests, dual-format build, package import checks
-npm run test:browser      # After build; requires Chromium on PATH (or BROWSER_BINARY)
 npm audit
 npm pack --dry-run
 ```
 
 Use `npm run dev` and open `http://127.0.0.1:4173/examples/index.html` for the runner-operation viewer and simulated result/signal replay. This builds before serving and avoids stale `dist` imports. Static serving after a fresh build also works. `examples/approval.ts` remains a typed async/parallel/human-approval control-flow example.
 
-The proposed npm name is `@maximus/diagram`. **Confirm ownership/availability of that scope and choose a license before publishing.** Nothing is published automatically. The publish allowlist includes only `dist/`, the README and integration documentation, not the old prototype, tests, examples, or editor swap files.
+The npm package is `@xxrandr/conecta-diagram` (MIT). Nothing is published automatically. The publish allowlist includes only `dist/`, the README, the license and integration documentation, not the old prototype, tests, examples, or editor swap files.
+
+To release: run `npm version patch|minor|major`, push with tags (`git push --follow-tags`), and the [Publish workflow](.github/workflows/publish.yml) builds, checks and publishes to npm using the `NPM_TOKEN` repository secret. Alternatively, run `npm publish` locally once `npm run check` passes.
 
 ## Quick start
 
-Load the shared visual system once in your browser entry: `import '@maximus/diagram/photon.css';`.
+Load the shared visual system once in your browser entry: `import '@xxrandr/conecta-diagram/photon.css';`.
 
 ```ts
-import { FlowStore, SvgFlowEditor, type FlowDocument } from "@maximus/diagram";
+import { FlowStore, SvgFlowEditor, type FlowDocument } from "@xxrandr/conecta-diagram";
 
 const flow: FlowDocument = {
   schemaVersion: 1,
@@ -71,7 +85,7 @@ unsubscribe();
 editor.destroy();
 ```
 
-Use `@maximus/diagram/core` for Node/server simulations and authoring without a renderer. Use `@maximus/diagram/svg` for the SVG adapter. ESM and CommonJS exports include TypeScript declarations. Even the root entry is safe to import during SSR; only instantiate the adapter after a browser mount.
+Use `@xxrandr/conecta-diagram/core` for Node/server simulations and authoring without a renderer. Use `@xxrandr/conecta-diagram/svg` for the SVG adapter. ESM and CommonJS exports include TypeScript declarations. Even the root entry is safe to import during SSR; only instantiate the adapter after a browser mount.
 
 ## Flow model
 
@@ -95,7 +109,7 @@ Normal nodes have exactly one output. Multiple inputs on a normal node **do not 
 Conditions are a data AST, not JavaScript strings. No `eval`, expression compiler, or arbitrary property traversal. Paths use arrays, including nested properties and array indices as strings.
 
 ```ts
-import type { Condition } from "@maximus/diagram/core";
+import type { Condition } from "@xxrandr/conecta-diagram/core";
 
 const condition: Condition = {
   op: "all",
@@ -159,7 +173,7 @@ import {
   parseFlow,
   serializeFlow,
   layoutFlow,
-} from "@maximus/diagram/core";
+} from "@xxrandr/conecta-diagram/core";
 
 const draftIssues = validateFlow(value, { mode: "draft" });
 const executionIssues = validateFlow(value); // Default: executable
@@ -173,7 +187,7 @@ Drafts may be incomplete. Draft validation still requires well-formed JSON, vali
 ## Simulations and external runtimes
 
 ```ts
-import { FlowSimulator } from "@maximus/diagram/core";
+import { FlowSimulator } from "@xxrandr/conecta-diagram/core";
 
 const simulation = new FlowSimulator(store.getSnapshot(), { approved: false });
 let result = simulation.run(1000);
@@ -221,7 +235,7 @@ The library does not impose a toolbar, modal, global side panel, or input form. 
 
 Adapter API: `select`, `getSelection`, `beginConnection`, `beginReconnection`, `cancelConnection`, `setContext`, `setExecution`, `getViewport`, `setViewport`, `animateViewport`, `zoomBy`, `fitToView`, `resize`, `exportSvg`, `destroy`, plus the placement APIs below. Selection callbacks receive `{ type: 'node' | 'edge' | 'global', id }` or `null`. Viewport changes do not enter document history. Coordinate units follow the host SVG's viewBox; update that viewBox alongside `resize(width, height)` if your host uses one.
 
-Import `@maximus/diagram/photon.css` with the renderer. Its light/dark token blocks use the Photon palette from `docs/photon-template.html`. Set `html[data-theme="light" | "dark"]`; the demo persists `wf-theme`. Node cards use the template's real `.flow-node` structure inside SVG foreignObjects, including category stripe, signals, preview and footer. No extra theme tokens were added. Groups expose `data-node-id`/`data-state`, edges expose `data-edge-id`. All user-provided text is inserted safely through DOM APIs. `destroy()` removes only instance-owned content/listeners.
+Import `@xxrandr/conecta-diagram/photon.css` with the renderer. Its light/dark token blocks use the Photon palette from `docs/photon-template.html`. Set `html[data-theme="light" | "dark"]`; the demo persists `wf-theme`. Node cards use the template's real `.flow-node` structure inside SVG foreignObjects, including category stripe, signals, preview and footer. No extra theme tokens were added. Groups expose `data-node-id`/`data-state`, edges expose `data-edge-id`. All user-provided text is inserted safely through DOM APIs. `destroy()` removes only instance-owned content/listeners.
 
 Diagram globals are optional `FlowDocument.globals` values with explicit `array`, `boolean`, `integer` or `json` types. `FlowStore.addGlobal/updateGlobal/removeGlobal` validate and preserve undo history. `orderedFlowItems()` pins globals before nodes/connections in recorded creation order. Globals are not new workflow nodes and have no implicit reference/execution behavior.
 
@@ -255,7 +269,7 @@ With reduced motion, camera/position tweens are immediate and a requested force 
 For headless D3 placement use the dedicated entry (no DOM required):
 
 ```ts
-import { ForcePlacement } from "@maximus/diagram/d3";
+import { ForcePlacement } from "@xxrandr/conecta-diagram/d3";
 const placement = new ForcePlacement(document, { maxDisplacement: 150 });
 const positions = placement.tick(120); // Constructor is stopped; same inputs/ticks are deterministic
 placement.destroy();
@@ -303,4 +317,4 @@ The original root-level D3 files and their existing local changes are preserved.
 
 This release provides a tested core and a D3-assisted SVG authoring adapter, not every feature of an established visual IDE. It does **not** yet include obstacle-avoiding edge routing, multi-selection, signal ports/bindings UI, groups/subflows, collaboration, persisted simulation checkpoints, cancellation scopes, retries/timeouts, inclusive/event gateways, BPMN import/export, or built-in React/Angular components. Static layout is deterministic breadth-first placement; force placement is a bounded, approximate visual aid. Multiple edges between the same pair currently share a route. Group elements use keyed joins and physics ticks update geometry only, but large-graph performance still needs benchmarking.
 
-Before declaring production maturity: exercise framework integrations, cross-browser accessibility and visual regressions, add large-graph performance tests, settle the package name/license, and review the public API against real execution-system requirements. Automated coverage exercises core editing/simulation, action previews, runner-result correlation/finality/uint64 handling, signals, D3 placement/motion, SVG lifecycle, and package imports. Chromium checks exercise real SVG coordinates, focus, motion, view-only dragging, operation/code inspection and approved/declined/failure/timeout event replays. Other browsers and exhaustive visual/accessibility checks are not yet covered.
+Before declaring production maturity: exercise framework integrations, cross-browser accessibility and visual regressions, add large-graph performance tests, and review the public API against real execution-system requirements. Automated coverage exercises core editing/simulation, action previews, runner-result correlation/finality/uint64 handling, signals, D3 placement/motion, SVG lifecycle, and package imports. Browser DOM integration and exhaustive visual/accessibility checks are not yet automated.

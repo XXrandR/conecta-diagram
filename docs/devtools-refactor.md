@@ -6,7 +6,7 @@
 
 **New theme/color tokens: none.** `--node-accent` and `--node-accent-soft` already exist in the template. Pane dimensions use inline geometry, not additional theme tokens.
 
-The library now exports `@maximus/diagram/photon.css`. Import it explicitly alongside the renderer. HTML cards inside SVG `foreignObject` preserve the actual template structure and `::before` stripe: `.node-header` → `.signals` → `.action-preview` → `.node-divider` → `.node-footer`. Hover, selection, focus-visible, shadows and the 32px icon chip come from that shared stylesheet. SVG control shapes and edges also use Photon tokens. No node kinds were added.
+The library now exports `@xxrandr/conecta-diagram/photon.css`. Import it explicitly alongside the renderer. HTML cards inside SVG `foreignObject` preserve the actual template structure and `::before` stripe: `.node-header` → `.signals` → `.action-preview` → `.node-divider` → `.node-footer`. Hover, selection, focus-visible, shadows and the 32px icon chip come from that shared stylesheet. SVG control shapes and edges also use Photon tokens. No node kinds were added.
 
 ## W1: diagram structure and globals
 
@@ -90,6 +90,4 @@ The demo uses explicit, labeled simulated-backend fixtures in `examples/performa
 
 ## Verification
 
-`npm run check` covers typed globals, interleaved creation order, performance integer/precision rules, palette fidelity, size persistence, existing core/replay behavior and dual-format/SSR package imports.
-
-`npm run test:browser` checks actual Photon card geometry, old-shell removal, global chips, background item order, node/global edit persistence, resizers/reload, all four replay outcomes, migrated Trace filters/paging/export, performance tracks/cost, all docks, real popup editing/selection/theme/play/stop sync, Close/Open and the tab-registration API. Popup assertions wait for owner acknowledgements/state; they do not mistake queued asynchronous commands for completed actions.
+`npm run check` covers typed globals, interleaved creation order, performance integer/precision rules, the Photon palette, existing core/replay behavior and dual-format/SSR package imports.

@@ -1,7 +1,28 @@
 {
-  "name": "@maximus/diagram",
+  "name": "@xxrandr/conecta-diagram",
   "version": "0.1.0",
   "description": "Framework-independent flow authoring, SVG rendering and deterministic simulation",
+  "license": "MIT",
+  "author": "Jhosua Daga <xxrandr@gmail.com>",
+  "keywords": [
+    "diagram",
+    "workflow",
+    "flow",
+    "editor",
+    "svg",
+    "d3",
+    "simulation",
+    "typescript",
+    "react"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XXrandR/conecta-diagram.git"
+  },
+  "homepage": "https://github.com/XXrandR/conecta-diagram#readme",
+  "bugs": {
+    "url": "https://github.com/XXrandR/conecta-diagram/issues"
+  },
   "type": "module",
   "sideEffects": [
     "**/*.css"
@@ -9,6 +30,22 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "core": [
+        "dist/core/index.d.ts"
+      ],
+      "svg": [
+        "dist/svg/index.d.ts"
+      ],
+      "d3": [
+        "dist/d3/index.d.ts"
+      ],
+      "*": [
+        "dist/index.d.ts"
+      ]
+    }
+  },
   "exports": {
     "./photon.css": "./dist/photon.css",
     ".": {
@@ -80,18 +117,16 @@
     "@types/d3-selection": "^3.0.12",
     "@types/d3-timer": "^3.0.2",
     "@types/node": "^22.0.0",
-    "jsdom": "^26.0.0",
-    "playwright-core": "^1.64.1",
-    "tsup": "^9.0.0",
-    "typescript": "^5.9.0",
-    "vitest": "^5.0.5"
-  },
-  "dependencies": {
     "d3-ease": "^3.0.1",
     "d3-force": "^3.0.0",
     "d3-interpolate": "^3.0.1",
     "d3-quadtree": "^3.0.1",
     "d3-selection": "^3.0.0",
-    "d3-timer": "^3.0.1"
+    "d3-timer": "^3.0.1",
+    "jsdom": "^26.0.0",
+    "playwright-core": "^1.64.1",
+    "tsup": "^9.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.5"
   }
 }
