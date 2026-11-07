@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Workflow DevTools</title>
+    <script>
+      try {
+        const t = localStorage.getItem("wf-theme");
+        document.documentElement.dataset.theme =
+          t === "dark" ? "dark" : "light";
+      } catch {}
+    </script>
+    <link rel="stylesheet" href="../dist/photon.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="detached-devtools">
+    <div class="detached-banner">
+      <span id="sync-state">Connecting to opener…</span
+      ><button class="theme-toggle" type="button">Dark mode</button>
+    </div>
+    <main id="detached-root"></main>
+    <script type="module" src="./devtools/window.js"></script>
+  </body>
+</html>

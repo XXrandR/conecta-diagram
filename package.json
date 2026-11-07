@@ -1,0 +1,98 @@
+{
+  "name": "@maximus/diagram",
+  "version": "0.1.0",
+  "description": "Framework-independent flow authoring, SVG rendering and deterministic simulation",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./photon.css": "./dist/photon.css",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./core": {
+      "import": {
+        "types": "./dist/core/index.d.ts",
+        "default": "./dist/core/index.js"
+      },
+      "require": {
+        "types": "./dist/core/index.d.cts",
+        "default": "./dist/core/index.cjs"
+      }
+    },
+    "./d3": {
+      "import": {
+        "types": "./dist/d3/index.d.ts",
+        "default": "./dist/d3/index.js"
+      },
+      "require": {
+        "types": "./dist/d3/index.d.cts",
+        "default": "./dist/d3/index.cjs"
+      }
+    },
+    "./svg": {
+      "import": {
+        "types": "./dist/svg/index.d.ts",
+        "default": "./dist/svg/index.js"
+      },
+      "require": {
+        "types": "./dist/svg/index.d.cts",
+        "default": "./dist/svg/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "docs"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup && node scripts/copy-assets.mjs",
+    "dev": "node scripts/dev.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:package": "node scripts/check-package.mjs",
+    "test:browser": "node scripts/check-browser.mjs",
+    "check": "npm run typecheck && npm test && npm run build && npm run test:package",
+    "prepublishOnly": "npm run check"
+  },
+  "devDependencies": {
+    "@types/d3-ease": "^3.0.2",
+    "@types/d3-force": "^3.0.10",
+    "@types/d3-interpolate": "^3.0.4",
+    "@types/d3-quadtree": "^3.0.6",
+    "@types/d3-selection": "^3.0.12",
+    "@types/d3-timer": "^3.0.2",
+    "@types/node": "^22.0.0",
+    "jsdom": "^26.0.0",
+    "playwright-core": "^1.64.1",
+    "tsup": "^9.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "d3-ease": "^3.0.1",
+    "d3-force": "^3.0.0",
+    "d3-interpolate": "^3.0.1",
+    "d3-quadtree": "^3.0.1",
+    "d3-selection": "^3.0.0",
+    "d3-timer": "^3.0.1"
+  }
+}

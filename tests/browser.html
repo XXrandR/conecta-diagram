@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>Diagram browser smoke tests</title>
+  <link rel="stylesheet" href="../dist/photon.css" />
+  <body>
+    <svg id="canvas" width="1000" height="600" viewBox="0 0 1000 600"></svg>
+    <output id="result" data-status="running">Running</output>
+    <script type="module">
+      import { FlowStore, SvgFlowEditor } from "../dist/index.js";
+
+      const result = document.getElementById("result");
+      const assert = (condition, message) => {
+        if (!condition) throw new Error(message);
+      };
+      const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      const fail = (error) => {
+        result.dataset.status = "failed";
+        result.textContent = error.stack ?? String(error);
+      };
+      window.addEventListener("unhandledrejection", (event) =>
+        fail(event.reason),
+      );
+      window.addEventListener("error", (event) =>
+        fail(event.error ?? event.message),
+      );
+      let editor;
+      try {
+        const svg = document.getElementById("canvas");
+        const store = new FlowStore({
+          schemaVersion: 1,
+          id: "browser-test",
+          nodes: [
+            {
+              id: "s",
+              type: "start",
+              label: "Start",
+              position: { x: 70, y: 180 },
+            },
+            { id: "a", type: "task", label: "A", position: { x: 270, y: 180 } },
+            { id: "b", type: "task", label: "B", position: { x: 280, y: 190 } },
+            {
+              id: "e",
+              type: "end",
+              label: "End",
+              position: { x: 570, y: 180 },
+            },
+          ],
+          edges: [
+            { id: "sa", source: "s", target: "a" },
+            { id: "ab", source: "a", target: "b", label: "Keep this" },
+            { id: "be", source: "b", target: "e" },
+          ],
+        });
+        editor = new SvgFlowEditor(svg, store, {
+          force: false,
+          motion: "full",
+          animationDuration: 30,
+        });
+        const node = (id) =>
+          [...svg.querySelectorAll("[data-node-id]")].find(
+            (node) => node.dataset.nodeId === id,
+          );
+        const start = node("s");
+        start.focus();
+        editor.select({ type: "node", id: "s" });
+        assert(
+          document.activeElement === start && node("s") === start,
+          "Keyed join lost browser focus",
+        );
+        store.moveNode("s", { x: 100, y: 180 });
+        await delay(100);
+        assert(
+          editor.getNodePositions().get("s").x === 100,
+          "Position tween did not finish",
+        );
+        editor.animateViewport({ x: 20, y: 30, scale: 1.2 }, 30);
+        await delay(100);
+        assert(
+          editor.getViewport().scale === 1.2,
+          "Camera animation did not finish",
+        );
+        editor.setViewport({ x: 0, y: 0, scale: 1 });
+
+        // Real SVG CTM conversion and window-level pointer handling.
+        const bounds = svg.getBoundingClientRect();
+        start.dispatchEvent(
+          new PointerEvent("pointerdown", {
+            bubbles: true,
+            pointerId: 1,
+            button: 0,
+            clientX: bounds.left + 100,
+            clientY: bounds.top + 180,
+          }),
+        );
+        window.dispatchEvent(
+          new PointerEvent("pointermove", {
+            pointerId: 1,
+            clientX: bounds.left + 120,
+            clientY: bounds.top + 200,
+          }),
+        );
+        window.dispatchEvent(
+          new PointerEvent("pointerup", {
+            pointerId: 1,
+            clientX: bounds.left + 120,
+            clientY: bounds.top + 200,
+          }),
+        );
+        assert(
+          store.getSnapshot().nodes[0].position.x === 100,
+          "Browser drag modified the saved plan",
+        );
+        assert(
+          editor.getNodePositions().get("s").x === 120,
+          "Browser drag did not move the displayed node",
+        );
+
+        const revision = store.getRevision();
+        editor.settlePlacement(120);
+        assert(store.getRevision() === revision, "Physics mutated the plan");
+        const a = editor.getNodePositions().get("a");
+        const b = editor.getNodePositions().get("b");
+        assert(
+          Math.hypot(a.x - b.x, a.y - b.y) > 100,
+          "D3 collisions did not separate crowded nodes",
+        );
+        assert(node("s") === start, "Physics replaced a keyed node");
+        assert(
+          store.getRevision() === revision,
+          "Placement must not enter undo history",
+        );
+        editor.beginReconnection("ab");
+        node("e").dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        const edge = store.getSnapshot().edges.find((edge) => edge.id === "ab");
+        assert(
+          edge.target === "e" && edge.label === "Keep this",
+          "Rewiring lost edge metadata",
+        );
+        editor.relax();
+        editor.animateViewport({ x: 100, y: 50, scale: 2 }, 200);
+        editor.destroy();
+        const stopped = editor.getViewport();
+        await delay(100);
+        assert(
+          !svg.querySelector("[data-flow-root]"),
+          "Destroy left SVG content behind",
+        );
+        assert(
+          editor.getViewport().x === stopped.x,
+          "Destroy left an active camera timer",
+        );
+        if (result.dataset.status !== "failed") {
+          result.dataset.status = "passed";
+          result.textContent =
+            "Chromium: focus, D3 placement, animations, SVG drag, rewiring and cleanup passed.";
+        }
+      } catch (error) {
+        fail(error);
+      } finally {
+        editor?.destroy();
+      }
+    </script>
+  </body>
+</html>

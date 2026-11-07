@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workflow Nodes — Firefox Profiler palette</title>
+
+<script>
+  /* Set theme before first paint to avoid a flash of the wrong theme. */
+  try {
+    var saved = localStorage.getItem("wf-theme");
+    var dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.dataset.theme = saved || (dark ? "dark" : "light");
+  } catch (_) {}
+</script>
+
+<style>
+  /* ------------------------------------------------------------
+     Palette — based on Firefox Photon colors (the same family
+     the Firefox Profiler uses: blue-60 #0060df, grey scale,
+     dark-mode accent #0a84ff).
+     ------------------------------------------------------------ */
+  :root {
+    color-scheme: light;
+
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
+                 Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+
+    --app-bg: #ededf0;          /* grey-20 */
+    --canvas-bg: #f9f9fa;       /* grey-10 */
+    --dot: #d7d7db;             /* grey-30 */
+
+    --surface: #ffffff;
+    --border: #d7d7db;          /* grey-30 */
+    --border-strong: #b1b1b3;   /* grey-40 */
+
+    --text: #0c0c0d;            /* grey-90 */
+    --text-secondary: #4a4a4f;  /* grey-60 */
+    --text-muted: #737373;      /* grey-50 */
+
+    --icon-bg: #ededf0;
+    --chip-bg: #ededf0;
+
+    --accent: #0060df;          /* blue-60 */
+    --selection-glow: rgba(0, 96, 223, 0.16);
+
+    --shadow-card: 0 1px 2px rgba(12, 12, 13, 0.06);
+    --shadow-card-hover: 0 2px 8px rgba(12, 12, 13, 0.10);
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
+
+    --app-bg: #0c0c0d;
+    --canvas-bg: #141414;
+    --dot: #2a2a2e;
+
+    --surface: #1c1c1f;
+    --border: #35353a;
+    --border-strong: #4a4a4f;
+
+    --text: #f9f9fa;
+    --text-secondary: #d7d7db;
+    --text-muted: #9a9aa2;
+
+    --icon-bg: #2a2a2e;
+    --chip-bg: #2a2a2e;
+
+    --accent: #0a84ff;          /* blue-50 / dark-mode blue */
+    --selection-glow: rgba(10, 132, 255, 0.24);
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.40);
+    --shadow-card-hover: 0 2px 10px rgba(0, 0, 0, 0.50);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 20px;
+    background: var(--app-bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .15s ease, color .15s ease;
+  }
+
+  /* ---------------- Toolbar ---------------- */
+
+  .toolbar {
+    max-width: 980px;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .toolbar-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 18px;
+    cursor: pointer;
+    transition: background-color .12s ease, border-color .12s ease, color .12s ease;
+  }
+
+  .theme-toggle:hover {
+    background: var(--chip-bg);
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+
+  .theme-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .icon {
+    display: block;
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .icon-sun { display: none; }
+  html[data-theme="dark"] .icon-sun { display: block; }
+  html[data-theme="dark"] .icon-moon { display: none; }
+
+  /* ---------------- Canvas ---------------- */
+
+  .canvas {
+    max-width: 980px;
+    min-height: 460px;
+    margin: 0 auto;
+    padding: 40px 28px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    background-color: var(--canvas-bg);
+    background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+    background-size: 16px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  /* ---------------- Nodes ---------------- */
+
+  .flow-node {
+    position: relative;
+    width: 300px;
+    padding: 14px 16px 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    cursor: pointer;
+    transition: border-color .12s ease, box-shadow .12s ease,
+                background-color .12s ease;
+  }
+
+  /* Category stripe, like a profiler track color */
+  .flow-node::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--node-accent);
+    opacity: .9;
+  }
+
+  .flow-node:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .flow-node.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--selection-glow), var(--shadow-card-hover);
+  }
+
+  .flow-node:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Per-kind accent colors */
+  .flow-node[data-kind="process"] {
+    --node-accent: #0060df;
+    --node-accent-soft: rgba(0, 96, 223, 0.10);
+  }
+  .flow-node[data-kind="service"] {
+    --node-accent: #008eaa;
+    --node-accent-soft: rgba(0, 142, 170, 0.12);
+  }
+  html[data-theme="dark"] .flow-node[data-kind="process"] {
+    --node-accent: #0a84ff;
+    --node-accent-soft: rgba(10, 132, 255, 0.16);
+  }
+  html[data-theme="dark"] .flow-node[data-kind="service"] {
+    --node-accent: #00c2d1;
+    --node-accent-soft: rgba(0, 194, 209, 0.16);
+  }
+
+  .node-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .node-icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    border-radius: 6px;
+    background: var(--icon-bg);
+    color: var(--node-accent);
+    transition: background-color .12s ease;
+  }
+
+  .flow-node.selected .node-icon {
+    background: var(--node-accent-soft);
+  }
+
+  .node-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .node-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 18px;
+    letter-spacing: -.01em;
+  }
+
+  .node-subtitle {
+    margin-top: 1px;
+    font-size: 11px;
+    line-height: 15px;
+    color: var(--text-muted);
+  }
+
+  /* ---------------- Signal chips ---------------- */
+
+  .signals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0 10px;
+  }
+
+  .signal {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px 2px 6px;
+    border-radius: 20px;
+    background: var(--chip-bg);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 16px;
+    white-space: nowrap;
+  }
+
+  .signal svg {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
+    fill: none;
+    stroke: var(--text-muted);
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ---------------- Preview row ---------------- */
+
+  .action-preview {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 12px;
+  }
+
+  .preview-label {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .preview-value {
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--chip-bg);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    line-height: 16px;
+  }
+
+  .node-divider {
+    height: 1px;
+    margin: 0 0 9px;
+    background: var(--border);
+  }
+
+  /* ---------------- Footer ---------------- */
+
+  .node-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .execution {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
+
+  .action-type {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  /* ---------------- Responsive ---------------- */
+
+  @media (max-width: 700px) {
+    body { padding: 12px; }
+    .canvas { padding: 28px 14px; gap: 20px; }
+    .flow-node { width: 100%; max-width: 340px; }
+  }
+</style>
+</head>
+
+<body>
+  <div class="toolbar">
+    <span class="toolbar-title">Workflow nodes</span>
+
+    <button class="theme-toggle" id="themeToggle" type="button"
+            aria-pressed="false" title="Toggle color theme">
+      <svg class="icon icon-moon" viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M13.5 9.6A5.75 5.75 0 0 1 6.4 2.5a5.75 5.75 0 1 0 7.1 7.1Z"/>
+      </svg>
+      <svg class="icon icon-sun" viewBox="0 0 16 16" aria-hidden="true">
+        <circle cx="8" cy="8" r="3"/>
+        <path d="M8 1.4v1.9M8 12.7v1.9M1.4 8h1.9M12.7 8h1.9M3.35 3.35l1.35 1.35M11.3 11.3l1.35 1.35M12.65 3.35 11.3 4.7M4.7 11.3l-1.35 1.35"/>
+      </svg>
+      <span id="themeLabel">Dark mode</span>
+    </button>
+  </div>
+
+  <main class="canvas">
+    <!-- Selected node -->
+    <article class="flow-node selected" data-kind="process" tabindex="0"
+             role="button" aria-pressed="true">
+      <header class="node-header">
+        <div class="node-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 16"/>
+          </svg>
+        </div>
+        <div>
+          <div class="node-title">Normalize order</div>
+          <div class="node-subtitle">Python · Process</div>
+        </div>
+      </header>
+
+      <div class="signals">
+        <div class="signal">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12h14m-5-5 5 5-5 5m6-14h3v18h-3"/>
+          </svg>
+          order.received
+        </div>
+        <div class="signal">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12h14m-5-5 5 5-5 5M6 3H3v18h3"/>
+          </svg>
+          order.normalized
+        </div>
+      </div>
+
+      <div class="action-preview">
+        <span class="preview-label">Profile</span>
+        <code class="preview-value">python-normalize</code>
+      </div>
+
+      <div class="node-divider"></div>
+
+      <div class="node-footer">
+        <span class="execution">
+          <span class="status-dot"></span>
+          Idle
+        </span>
+        <code class="action-type">process.exec</code>
+      </div>
+    </article>
+
+    <!-- Unselected node -->
+    <article class="flow-node" data-kind="service" tabindex="0"
+             role="button" aria-pressed="false">
+      <header class="node-header">
+        <div class="node-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 5h16v14H4zM8 9h8M8 13h5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="node-title">Validate payment</div>
+          <div class="node-subtitle">Payment · Service</div>
+        </div>
+      </header>
+
+      <div class="signals">
+        <div class="signal">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12h14m-5-5 5 5-5 5m6-14h3v18h-3"/>
+          </svg>
+          payment.created
+        </div>
+        <div class="signal">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12h14m-5-5 5 5-5 5M6 3H3v18h3"/>
+          </svg>
+          payment.verified
+        </div>
+      </div>
+
+      <div class="action-preview">
+        <span class="preview-label">Provider</span>
+        <code class="preview-value">payment-gateway</code>
+      </div>
+
+      <div class="node-divider"></div>
+
+      <div class="node-footer">
+        <span class="execution">
+          <span class="status-dot"></span>
+          Idle
+        </span>
+        <code class="action-type">payment.verify</code>
+      </div>
+    </article>
+  </main>
+
+<script>
+  const root = document.documentElement;
+  const toggle = document.getElementById("themeToggle");
+  const themeLabel = document.getElementById("themeLabel");
+
+  function applyTheme(theme) {
+    root.dataset.theme = theme;
+    const dark = theme === "dark";
+    toggle.setAttribute("aria-pressed", String(dark));
+    themeLabel.textContent = dark ? "Light mode" : "Dark mode";
+  }
+
+  applyTheme(root.dataset.theme === "dark" ? "dark" : "light");
+
+  toggle.addEventListener("click", () => {
+    const next = root.dataset.theme === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem("wf-theme", next); } catch (_) {}
+  });
+
+  /* ----- Node selection ----- */
+
+  const nodes = [...document.querySelectorAll(".flow-node")];
+
+  function selectNode(node) {
+    for (const item of nodes) {
+      const selected = item === node;
+      item.classList.toggle("selected", selected);
+      item.setAttribute("aria-pressed", String(selected));
+    }
+  }
+
+  nodes.forEach((node, index) => {
+    node.addEventListener("click", () => selectNode(node));
+
+    node.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        selectNode(node);
+        return;
+      }
+
+      // Let the arrow keys move focus between nodes.
+      if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+        event.preventDefault();
+        const direction = event.key === "ArrowRight" ? 1 : -1;
+        nodes[(index + direction + nodes.length) % nodes.length].focus();
+      }
+    });
+  });
+</script>
+</body>
+</html>

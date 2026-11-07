@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Workflow / Photon DevTools</title>
+    <script>
+      try {
+        var saved = localStorage.getItem("wf-theme");
+        document.documentElement.dataset.theme =
+          saved === "dark" || saved === "light"
+            ? saved
+            : matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+      } catch (_) {}
+    </script>
+    <link rel="stylesheet" href="../dist/photon.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-toolbar">
+        <strong>Workflow / Order report</strong
+        ><span id="node-count" class="muted"></span
+        ><span class="toolbar-spacer"></span
+        ><span class="muted">Local simulation · no runner connection</span
+        ><button class="theme-toggle" id="theme-toggle" type="button">
+          Dark mode
+        </button>
+      </header>
+      <nav class="diagram-toolbar" aria-label="Diagram controls">
+        <button id="fit">Fit diagram</button
+        ><button id="zoom-in" aria-label="Zoom in">＋</button
+        ><button id="zoom-out" aria-label="Zoom out">−</button
+        ><button id="undo">Undo edit</button
+        ><button id="redo">Redo edit</button>
+        <details class="planning-menu">
+          <summary>Plan actions</summary>
+          <div class="planning-popover">
+            <label
+              >Operation preview<select
+                id="preset"
+                aria-label="Operation capability preview"
+              ></select></label
+            ><button id="add">Add operation preview</button
+            ><button id="connect">Connect node</button
+            ><button id="reconnect">Reconnect edge</button
+            ><button id="validate">Validate plan</button
+            ><button id="download">Export plan</button
+            ><label
+              >Import plan<input
+                id="import"
+                type="file"
+                accept="application/json,.json"
+            /></label>
+          </div>
+        </details>
+        <span class="toolbar-spacer"></span
+        ><button id="open-devtools">Open DevTools</button>
+      </nav>
+      <div id="workspace-layout" class="workspace-layout" data-dock="bottom">
+        <main class="diagram-surface">
+          <div
+            id="global-variables"
+            class="global-variables"
+            aria-label="Diagram global variables"
+          ></div>
+          <section class="canvas" aria-label="Workflow canvas">
+            <svg
+              id="canvas"
+              viewBox="0 0 1320 820"
+              aria-label="Workflow diagram"
+            ></svg>
+          </section>
+        </main>
+        <div id="dock-resizer" aria-label="Resize DevTools"></div>
+        <section id="devtools-root"></section>
+      </div>
+      <footer class="statusbar">
+        <output id="status" aria-live="polite">Loading workflow…</output>
+      </footer>
+    </div>
+    <script type="module" src="./demo.js"></script>
+  </body>
+</html>
