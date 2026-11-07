@@ -69,7 +69,6 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:package": "node scripts/check-package.mjs",
-    "test:browser": "node scripts/check-browser.mjs",
     "check": "npm run typecheck && npm test && npm run build && npm run test:package",
     "prepublishOnly": "npm run check"
   },
