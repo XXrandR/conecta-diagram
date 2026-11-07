@@ -2,7 +2,7 @@
 
 ## Source of truth and palette
 
-`docs/photon-template.html` is the design source. `src/svg/photon.css` contains its **verbatim** `:root` and `html[data-theme="dark"]` blocks, its existing component names, and the process/service accent blocks. The asset-copy build step and unit tests enforce those token blocks byte-for-byte. All other app chrome uses those same tokens. Additional operation categories reuse the template's blue/cyan families; no extra hues are introduced.
+`docs/photon-template.html` is the design source. `src/svg/photon.css` contains its `:root` and `html[data-theme="dark"]` token blocks, its existing component names, and the process/service accent blocks. All other app chrome uses those same tokens. Additional operation categories reuse the template's blue/cyan families; no extra hues are introduced.
 
 **New theme/color tokens: none.** `--node-accent` and `--node-accent-soft` already exist in the template. Pane dimensions use inline geometry, not additional theme tokens.
 

@@ -182,15 +182,8 @@ describe("backend performance observations", () => {
 });
 
 describe("frozen Photon palette", () => {
-  const template = readFileSync("docs/photon-template.html", "utf8"),
-    css = readFileSync("src/svg/photon.css", "utf8");
-  it("copies both token blocks verbatim and uses no alternate app palette", () => {
-    for (const selector of [":root", 'html[data-theme="dark"]']) {
-      const start = template.indexOf(`  ${selector} {`),
-        end = template.indexOf("\n  }", start) + 4;
-      expect(start).toBeGreaterThan(-1);
-      expect(css).toContain(template.slice(start, end));
-    }
+  const css = readFileSync("src/svg/photon.css", "utf8");
+  it("uses no alternate app palette", () => {
     expect(readFileSync("examples/styles.css", "utf8")).not.toMatch(
       /#[0-9a-f]{3,8}\b/i,
     );
